@@ -1,0 +1,10 @@
+# Encodage UTF-8 pour tout le dépôt (évite les caractères français corrompus)
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.{js,jsx,ts,tsx,json,css,html,md,prisma,sql}]
+charset = utf-8

@@ -1,0 +1,47 @@
+{
+  "name": "meteo-energetique-api",
+  "version": "1.0.0",
+  "description": "API Météo Énergétique — suivi coupures secteurs, IoT MQTT, PostGIS",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "postinstall": "prisma generate",
+    "dev": "node --watch src/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "db:migrate-communes": "node scripts/run-sql-migration.js sql/migrate-add-communes.sql",
+    "db:migrate-v4": "npx prisma db execute --file sql/migrate-v4-grand-conakry.sql --schema prisma/schema.prisma",
+    "db:migrate-reports-location": "npx prisma db execute --file sql/migrate-user-reports-location.sql --schema prisma/schema.prisma",
+    "test:reports": "powershell -ExecutionPolicy Bypass -File scripts/test-reports.ps1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "meteo-energetique",
+    "postgis",
+    "mqtt",
+    "express"
+  ],
+  "license": "UNLICENSED",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "mqtt": "^5.13.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.2"
+  }
+}

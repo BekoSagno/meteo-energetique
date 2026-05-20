@@ -1,0 +1,27 @@
+# Dépendances
+node_modules/
+
+# Environnement & secrets
+.env
+.env.local
+.env.*.local
+
+# Build
+frontend/dist/
+dist/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Prisma / cache
+backend/node_modules/.prisma/
+
+# Assets temporaires Cursor
+assets/

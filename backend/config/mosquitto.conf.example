@@ -1,0 +1,13 @@
+# Exemple de configuration Mosquitto locale (à copier vers votre install Mosquitto)
+# Windows : souvent C:\Program Files\mosquitto\mosquitto.conf
+
+listener 1883
+allow_anonymous true
+
+# En production : désactiver allow_anonymous et configurer password_file / ACL
+# password_file /etc/mosquitto/passwd
+# acl_file /etc/mosquitto/acl
+
+# Logs utiles au debug des kits
+# log_dest file /var/log/mosquitto/mosquitto.log
+# log_type all

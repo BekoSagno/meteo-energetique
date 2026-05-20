@@ -1,0 +1,142 @@
+// Hiérarchie : Région → Commune → Quartier → Secteur (PostGIS + power_status)
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis(schema: "public")]
+}
+
+model Region {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  communes  Commune[]
+  sectors   Sector[]
+
+  @@map("regions")
+}
+
+model Commune {
+  id        Int       @id @default(autoincrement())
+  regionId  Int       @map("region_id")
+  name      String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  region    Region    @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  quartiers Quartier[]
+  sectors   Sector[]
+
+  @@unique([regionId, name], map: "unique_commune_per_region")
+  @@map("communes")
+}
+
+model Quartier {
+  id        Int      @id @default(autoincrement())
+  communeId Int      @map("commune_id")
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  commune Commune  @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  sectors Sector[]
+
+  @@unique([communeId, name], map: "unique_quartier_per_commune")
+  @@map("quartiers")
+}
+
+model Sector {
+  id         Int      @id @default(autoincrement())
+  regionId   Int      @map("region_id")
+  communeId  Int      @map("commune_id")
+  quartierId Int      @map("quartier_id")
+  name       String   @db.VarChar(100)
+  boundary   Unsupported("geometry(Point,4326)")?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  region      Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  commune     Commune      @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  quartier    Quartier     @relation(fields: [quartierId], references: [id], onDelete: Cascade)
+  users       User[]
+  iotKits     IotKit[]
+  powerStatus PowerStatus?
+  powerLogs   PowerLog[]
+  userReports UserReport[]
+
+  @@unique([quartierId, name], map: "unique_sector_per_quartier")
+  @@map("sectors")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  phoneNumber     String   @unique @map("phone_number") @db.VarChar(20)
+  name            String?  @db.VarChar(100)
+  role            String   @default("citizen") @db.VarChar(20)
+  defaultSectorId Int?     @map("default_sector_id")
+  fcmToken        String?  @map("fcm_token")
+  isVerified      Boolean  @default(false) @map("is_verified")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  defaultSector Sector?      @relation(fields: [defaultSectorId], references: [id], onDelete: SetNull)
+  reports       UserReport[]
+
+  @@map("users")
+}
+
+model IotKit {
+  id           String    @id @db.VarChar(50)
+  sectorId     Int       @map("sector_id")
+  locationName String    @map("location_name") @db.VarChar(150)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastPing     DateTime? @map("last_ping") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  sector    Sector     @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  powerLogs PowerLog[]
+
+  @@map("iot_kits")
+}
+
+model PowerStatus {
+  sectorId            Int       @id @map("sector_id")
+  currentState        String    @default("ONLINE") @map("current_state") @db.VarChar(20)
+  lastUpdated         DateTime  @default(now()) @map("last_updated") @db.Timestamptz(6)
+  estimatedReturnTime DateTime? @map("estimated_return_time") @db.Timestamptz(6)
+  confidenceScore     Int       @default(100) @map("confidence_score")
+
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@map("power_status")
+}
+
+model PowerLog {
+  id             BigInt   @id @default(autoincrement())
+  sectorId       Int      @map("sector_id")
+  kitId          String?  @map("kit_id") @db.VarChar(50)
+  stateChangedTo String   @map("state_changed_to") @db.VarChar(20)
+  changedAt      DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+
+  sector Sector  @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  kit    IotKit? @relation(fields: [kitId], references: [id], onDelete: SetNull)
+
+  @@index([sectorId, changedAt(sort: Desc)], map: "idx_power_logs_sector_time")
+  @@map("power_logs")
+}
+
+model UserReport {
+  id           BigInt   @id @default(autoincrement())
+  userId       Int?     @map("user_id")
+  sectorId     Int      @map("sector_id")
+  reportType   String   @map("report_type") @db.VarChar(30)
+  reportedAt   DateTime @default(now()) @map("reported_at") @db.Timestamptz(6)
+  userLocation Unsupported("geometry(Point,4326)")? @map("user_location")
+
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@index([reportedAt(sort: Desc)], map: "idx_user_reports_time")
+  @@map("user_reports")
+}

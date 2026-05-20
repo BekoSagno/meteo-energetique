@@ -1,0 +1,53 @@
+### Météo Énergétique — tests signalements (REST Client / VS Code)
+@baseUrl = http://localhost:3000
+@lat = 9.558
+@lng = -13.647
+
+### État initial
+GET {{baseUrl}}/api/sectors/current?lat={{lat}}&lng={{lng}}
+
+### Signalement 1/3 — coupure (userId de test du seed : 1, 2 ou 3)
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+{
+  "reportType": "TOTAL_DARKNESS",
+  "lat": {{lat}},
+  "lng": {{lng}},
+  "userId": 1
+}
+
+### Signalement 2/3 (même userId possible — mode total_reports)
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+{
+  "reportType": "TOTAL_DARKNESS",
+  "lat": {{lat}},
+  "lng": {{lng}},
+  "userId": 1
+}
+
+### Signalement 3/3 — déclenche le consensus → OFFLINE
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+{
+  "reportType": "TOTAL_DARKNESS",
+  "lat": {{lat}},
+  "lng": {{lng}},
+  "userId": 1
+}
+
+### Vérification état secteur
+GET {{baseUrl}}/api/sectors/current?lat={{lat}}&lng={{lng}}
+
+### Hors zone (doit échouer 400)
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+{
+  "reportType": "TOTAL_DARKNESS",
+  "lat": 48.8566,
+  "lng": 2.3522
+}
