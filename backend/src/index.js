@@ -10,13 +10,18 @@ async function start() {
   await connectDatabase();
   console.info('[DB] PostgreSQL connecté');
 
-  try {
-    await connectMqtt();
-  } catch (error) {
-    console.warn(
-      '[MQTT] Broker indisponible au démarrage — l’API HTTP reste active :',
-      error.message
-    );
+  // MODIFICATION ICI : On ne connecte MQTT que si on n'est pas sur Render
+  if (!process.env.RENDER) {
+    try {
+      await connectMqtt();
+    } catch (error) {
+      console.warn(
+        '[MQTT] Broker indisponible au démarrage — l’API HTTP reste active :',
+        error.message
+      );
+    }
+  } else {
+    console.info('[MQTT] Désactivé en production sur Render pour libérer les ressources.');
   }
 
   server = app.listen(env.port, () => {
@@ -32,7 +37,9 @@ async function shutdown(signal) {
     await new Promise((resolve) => server.close(resolve));
   }
 
-  await disconnectMqtt();
+  if (!process.env.RENDER) {
+    await disconnectMqtt();
+  }
   await disconnectDatabase();
 
   process.exit(0);
