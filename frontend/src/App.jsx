@@ -8,7 +8,6 @@ import PhoneAuthModal from './components/auth/PhoneAuthModal.jsx';
 import ReportButton from './components/ReportButton.jsx';
 import TopCommunes from './components/TopCommunes.jsx';
 import ViewPageTitle from './components/motion/ViewPageTitle.jsx';
-import LocationRefiningBanner from './components/LocationRefiningBanner.jsx';
 import HomeLandingHero from './components/landing/HomeLandingHero.jsx';
 import CitizenEngagementSection from './components/landing/CitizenEngagementSection.jsx';
 import ReadyToActBanner from './components/landing/ReadyToActBanner.jsx';
@@ -24,7 +23,6 @@ function App() {
   const [selectedSector, setSelectedSector] = useState(INSTANT_PLACEHOLDER_SECTOR);
   const [locationMode, setLocationMode] = useState('fallback');
   const [weatherRefresh, setWeatherRefresh] = useState(0);
-  const [apiRefining, setApiRefining] = useState(true);
   const [authOpen, setAuthOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -57,8 +55,6 @@ function App() {
         }
       } catch {
         /* le placeholder Kaloum reste affiché */
-      } finally {
-        if (!controller.signal.aborted) setApiRefining(false);
       }
     })();
 
@@ -91,7 +87,6 @@ function App() {
     userHasChosen.current = true;
     setSelectedSector(sector);
     setLocationMode(null);
-    setApiRefining(false);
 
     const hash = window.location.hash.replace(/^#/, '') || 'accueil';
     if (hash !== 'accueil' && hash !== 'meteo' && hash !== 'signaler') {
@@ -118,7 +113,6 @@ function App() {
     userHasChosen.current = true;
     setSelectedSector(sector);
     setLocationMode(null);
-    setApiRefining(false);
     navigateTo('accueil');
     window.setTimeout(scrollToLiveDashboard, 150);
   }
@@ -158,17 +152,6 @@ function App() {
     commune: selectedSector?.commune?.name,
     quartier: quartierName,
   };
-
-  const refiningLocation =
-    !userHasChosen.current && (apiRefining || geo.refining);
-  const refiningDetail =
-    geo.refining && apiRefining
-      ? 'Connexion au serveur et affinage GPS…'
-      : geo.refining
-        ? 'Détection de votre secteur (GPS)…'
-        : apiRefining
-          ? 'Synchronisation des données Conakry…'
-          : undefined;
 
   const selectedCommuneId = selectedSector?.communeId ?? selectedSector?.commune?.id;
   const selectedSectorId = selectedSector?.id ?? null;
@@ -248,7 +231,6 @@ function App() {
             {indexError && (
               <p className="mb-4 text-center text-sm font-semibold text-brand-red">{indexError}</p>
             )}
-            <LocationRefiningBanner active={refiningLocation} detail={refiningDetail} />
             <NetworkStats
               key={selectedSector?.id ?? 'default'}
               {...networkStatsProps}
@@ -274,11 +256,6 @@ function App() {
                     aria-hidden
                   />
                   <HomeLandingHero embedded />
-                  {refiningLocation && (
-                    <div className="relative z-10 border-b border-white/10 px-4 py-2 sm:px-6">
-                      <LocationRefiningBanner active detail={refiningDetail} />
-                    </div>
-                  )}
                   <NetworkStats
                     key={selectedSector?.id ?? 'default'}
                     {...networkStatsProps}
