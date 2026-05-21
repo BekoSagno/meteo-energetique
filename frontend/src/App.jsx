@@ -65,7 +65,6 @@ function App() {
     if (!geo.sector || userHasChosen.current) return;
     setSelectedSector(geo.sector);
     setLocationMode(geo.locationMode ?? 'gps');
-    setApiRefining(false);
   }, [geo.sector, geo.locationMode]);
 
   useEffect(() => {
@@ -122,7 +121,6 @@ function App() {
     if (sector) {
       setSelectedSector(sector);
       setLocationMode(null);
-      setApiRefining(false);
     }
   }
 
