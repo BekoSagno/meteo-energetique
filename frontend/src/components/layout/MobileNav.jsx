@@ -12,10 +12,9 @@ import { formatPhoneDisplay } from '../../lib/auth.js';
 import CommuneQuickPicker from './CommuneQuickPicker.jsx';
 
 const PRIMARY_LINKS = [
-  { label: 'Accueil', icon: IconHome, href: '#accueil' },
-  { label: 'Tableau de bord', icon: IconMap, href: '#accueil' },
+  { label: 'La Météo du Jour', icon: IconHome, href: '#accueil' },
   { label: 'Carte énergétique', icon: IconMap, href: '#carte' },
-  { label: 'État réseau', icon: IconBolt, href: '#reseau' },
+  { label: 'Historique', icon: IconBolt, href: '#reseau' },
   { label: 'Signaler une coupure', icon: IconReport, action: 'report' },
 ];
 

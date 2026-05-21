@@ -1,6 +1,6 @@
-/** Coordonnées par défaut — centre Dixinn, Conakry (aligné sur le seed backend). */
-export const DEFAULT_LAT = 9.558;
-export const DEFAULT_LNG = -13.647;
+/** Coordonnées par défaut — centre Kaloum, Conakry (aligné sur le seed backend). */
+export const DEFAULT_LAT = 9.508;
+export const DEFAULT_LNG = -13.71;
 
 /** userId de test (voir npm run db:seed). */
 export const DEFAULT_TEST_USER_ID = 1;

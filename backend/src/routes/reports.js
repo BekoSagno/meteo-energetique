@@ -6,7 +6,7 @@ export const reportsRouter = Router();
 
 /**
  * POST /api/reports
- * Signalement anonyme : { reportType, lat, lng } — aucun OTP ni JWT requis.
+ * Signalement anonyme : { reportType, lat, lng } — JWT optionnel.
  * JWT optionnel : si fourni, le signalement est lié au compte (user_id non null).
  */
 reportsRouter.post('/', optionalAuth, async (req, res, next) => {

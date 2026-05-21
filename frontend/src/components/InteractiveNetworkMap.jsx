@@ -38,6 +38,7 @@ export default function InteractiveNetworkMap({
   regionId,
   focusedCommuneId = null,
   selectedSectorId,
+  forceGlobalView = false,
   onCommuneFocus,
   onSectorSelect,
   refreshKey = 0,
@@ -101,6 +102,11 @@ export default function InteractiveNetworkMap({
           <p className="mt-1 text-center text-sm font-medium text-brand-dark/55">
             Grand Conakry · {communes.length || 13} communes · OpenStreetMap
           </p>
+          {forceGlobalView && (
+            <p className="mt-2 text-center text-xs font-semibold text-brand-dark/65">
+              Position hors Guinée — vue d&apos;ensemble du réseau. Zoomez ou recherchez un secteur.
+            </p>
+          )}
 
           <div
             className="mt-5 flex gap-1 overflow-x-auto pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -153,6 +159,7 @@ export default function InteractiveNetworkMap({
                 sectors={sectors}
                 focusedCommuneId={focusedCommuneId}
                 selectedSectorId={selectedSectorId}
+                forceGlobalView={forceGlobalView}
                 onCommuneClick={handleCommuneClick}
                 onSectorClick={handleSectorClick}
               />

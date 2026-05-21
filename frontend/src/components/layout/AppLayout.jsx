@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SearchModal from '../SearchModal.jsx';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import MobileNav from './MobileNav.jsx';
@@ -17,12 +18,21 @@ export default function AppLayout({
   activeView = 'accueil',
   authUser = null,
   selectedCommuneId,
+  isSearchOpen: isSearchOpenProp,
+  onSearchOpen,
+  onSearchClose,
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [internalSearchOpen, setInternalSearchOpen] = useState(false);
+
+  const isSearchOpen = isSearchOpenProp ?? internalSearchOpen;
+  const openSearch = onSearchOpen ?? (() => setInternalSearchOpen(true));
+  const closeSearch = onSearchClose ?? (() => setInternalSearchOpen(false));
 
   function handleSectorSelect(sector) {
     onSectorSelect(sector);
     setMobileNavOpen(false);
+    closeSearch();
   }
 
   function handleCommuneSelect(commune, sector) {
@@ -73,25 +83,21 @@ export default function AppLayout({
           />
 
           <div className="app-main-column relative z-0 flex min-w-0 flex-1 flex-col">
-            <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 pb-24 sm:p-6 sm:pb-28">
+            <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 pb-28 sm:p-6 sm:pb-32">
               {children}
             </main>
           </div>
         </div>
 
-        <div
-          className="pointer-events-none fixed bottom-7 left-0 right-0 z-50 flex justify-center px-4 pb-4 sm:pb-20 lg:left-56 lg:px-3"
-          role="search"
-          aria-label="Recherche locale"
-        >
-          <div className="pointer-events-auto w-full max-w-xl sm:max-w-2xl">
-            <QuickSearchCTA
-              index={index}
-              indexLoading={indexLoading}
-              onSectorSelect={handleSectorSelect}
-            />
-          </div>
-        </div>
+        <QuickSearchCTA onOpen={openSearch} />
+
+        <SearchModal
+          open={isSearchOpen}
+          onClose={closeSearch}
+          index={index}
+          indexLoading={indexLoading}
+          onSectorSelect={handleSectorSelect}
+        />
 
         <Footer />
       </div>

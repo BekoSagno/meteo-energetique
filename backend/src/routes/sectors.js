@@ -1,4 +1,8 @@
 import { Router } from 'express';
+import {
+  isWithinGrandConakryCoverage,
+  isWithinGuinea,
+} from '../lib/conakryBounds.js';
 import { parseCoordinates } from '../lib/geo.js';
 import {
   findSectorAtCoordinates,
@@ -10,6 +14,19 @@ export const sectorsRouter = Router();
 sectorsRouter.get('/current', async (req, res, next) => {
   try {
     const { latitude, longitude } = parseCoordinates(req.query.lat, req.query.lng);
+
+    if (!isWithinGrandConakryCoverage(latitude, longitude)) {
+      return res.json({
+        sector: null,
+        powerStatus: null,
+        coordinates: { lat: latitude, lng: longitude },
+        inCoverage: false,
+        outOfGuinea: !isWithinGuinea(latitude, longitude),
+        message:
+          'Position hors du Grand Conakry couvert. Utilisez la carte ou la recherche pour explorer le réseau.',
+      });
+    }
+
     const sector = await findSectorAtCoordinates(latitude, longitude);
 
     if (!sector) {
@@ -17,6 +34,8 @@ sectorsRouter.get('/current', async (req, res, next) => {
         sector: null,
         powerStatus: null,
         coordinates: { lat: latitude, lng: longitude },
+        inCoverage: true,
+        outOfGuinea: false,
         message:
           'Aucun secteur cartographié ne correspond à votre position. Vous êtes peut-être en dehors des zones couvertes.',
       });
@@ -35,6 +54,8 @@ sectorsRouter.get('/current', async (req, res, next) => {
       },
       powerStatus: sector.powerStatus,
       coordinates: { lat: latitude, lng: longitude },
+      inCoverage: true,
+      outOfGuinea: false,
     });
   } catch (error) {
     next(error);

@@ -1,28 +1,16 @@
 import { Router } from 'express';
-import { requestOtp, verifyOtpAndLogin } from '../services/auth.js';
+import { loginWithPhone } from '../services/auth.js';
 
 export const authRouter = Router();
 
 /**
- * POST /api/auth/request-otp
+ * POST /api/auth/login
  * Body: { phoneNumber: "612345678" | "+224612345678" }
+ * Connexion immédiate — aucun code SMS.
  */
-authRouter.post('/request-otp', async (req, res, next) => {
+authRouter.post('/login', async (req, res, next) => {
   try {
-    const result = await requestOtp(req.body);
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * POST /api/auth/verify-otp
- * Body: { phoneNumber, code: "1234" }
- */
-authRouter.post('/verify-otp', async (req, res, next) => {
-  try {
-    const result = await verifyOtpAndLogin(req.body);
+    const result = await loginWithPhone(req.body);
     res.json(result);
   } catch (error) {
     next(error);

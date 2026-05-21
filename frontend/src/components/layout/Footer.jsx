@@ -1,65 +1,77 @@
 import ScrollReveal from '../motion/ScrollReveal.jsx';
 
+const NAV_LINKS = [
+  { href: '#accueil', label: 'La Météo du Jour' },
+  { href: '#carte', label: 'Carte' },
+  { href: '#signaler', label: 'Signalements' },
+];
+
+const LEGAL_LINKS = [
+  { href: '#confidentialite', label: 'Confidentialité' },
+  { href: '#cgu', label: 'CGU' },
+];
+
 export default function Footer() {
+  const year = new Date().getFullYear();
+
   return (
-    <ScrollReveal as="footer" className="z-30 mt-auto w-full bg-[#004B2B] text-white" role="contentinfo">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 sm:grid-cols-2 sm:px-6 sm:py-10 lg:grid-cols-4">
-        <div>
-          <img
-            src="/logoGNE.png"
-            alt=""
-            className="mb-4 h-12 w-auto rounded bg-brand-bg px-2 py-1"
-          />
-          <p className="text-base font-semibold leading-relaxed text-white/90">
-            Plateforme citoyenne de suivi de la disponibilité électrique par secteur à Conakry.
+    <ScrollReveal
+      as="footer"
+      className="z-30 mt-auto w-full border-t border-brand-dark/10 bg-brand-dark text-white"
+      role="contentinfo"
+    >
+      <div className="mx-auto grid w-full max-w-5xl gap-10 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:gap-8 lg:py-12">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logoGNE.png"
+              alt=""
+              className="h-11 w-auto rounded-lg bg-brand-bg px-2 py-1"
+            />
+            <span className="font-display text-lg font-extrabold tracking-tight">
+              Météo Énergétique
+            </span>
+          </div>
+          <p className="mt-4 max-w-xs text-sm font-medium leading-relaxed text-white/75">
+            Promouvoir la transparence énergétique et inciter au comportement citoyen à Conakry.
           </p>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white transition-colors duration-300 hover:text-brand-yellow">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-brand-yellow">
             Navigation
           </h3>
-          <ul className="space-y-2.5 text-base font-semibold text-white/85">
-            <li>
-              <a href="#accueil" className="link-footer">
-                Tableau de bord
-              </a>
-            </li>
-            <li>
-              <a href="#accueil" className="link-footer">
-                Présentation
-              </a>
-            </li>
-            <li>
-              <a href="#signaler" className="link-footer">
-                Signaler une coupure
-              </a>
-            </li>
-            <li>
-              <a href="#apropos" className="link-footer">
-                À propos
-              </a>
-            </li>
+          <ul className="mt-4 space-y-2.5">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className="link-footer text-sm font-semibold">
+                  {link.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white transition-colors duration-300 hover:text-brand-yellow">
-            Couverture
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-brand-yellow">
+            Légal
           </h3>
-          <ul className="space-y-2.5 text-base font-semibold text-white/85">
-            <li>13 communes du Grand Conakry</li>
-            <li>325 secteurs cartographiés</li>
-            <li>Kits IoT & signalements communautaires</li>
-            <li>Données PostGIS temps réel</li>
+          <ul className="mt-4 space-y-2.5">
+            {LEGAL_LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className="link-footer text-sm font-semibold">
+                  {link.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white transition-colors duration-300 hover:text-brand-yellow">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-brand-yellow">
             Contact
           </h3>
-          <ul className="space-y-2.5 text-base font-semibold text-white/85">
+          <ul className="mt-4 space-y-2.5 text-sm font-semibold text-white/85">
             <li>
               <a href="mailto:contact@meteo-energetique.gn" className="link-footer">
                 contact@meteo-energetique.gn
@@ -70,9 +82,10 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl border-t border-white/15 px-4 py-4 text-center text-sm font-semibold text-white/60 sm:px-6">
-        © {new Date().getFullYear()} Météo Énergétique — Tous droits réservés. Données à titre
-        informatif.
+      <div className="border-t border-white/10 py-5 text-center">
+        <p className="text-xs font-semibold tracking-wide text-white/45">
+          © 2024–{year} MÉTÉO ÉNERGÉTIQUE. Tous droits réservés.
+        </p>
       </div>
     </ScrollReveal>
   );

@@ -140,7 +140,16 @@
   }
 
   .app-sidebar .app-nav-item--active {
-    @apply ring-1 ring-brand-green/35 shadow-none;
+    @apply rounded-xl bg-emerald-50 text-emerald-900 shadow-none ring-0;
+  }
+
+  .app-sidebar .app-nav-item--active::before {
+    @apply hidden;
+  }
+
+  .app-sidebar .app-nav-item--active svg {
+    @apply text-emerald-900;
+    filter: none;
   }
 
   .app-sidebar .app-nav-item::before {
@@ -377,12 +386,12 @@
   }
 
   .btn-report {
-    @apply inline-flex items-center justify-center rounded-xl border-2 border-brand-red bg-white px-7 py-3.5 font-display text-base font-extrabold text-brand-red shadow-sm transition-all duration-300 ease-out;
+    @apply inline-flex items-center justify-center rounded-xl border-2 border-emerald-700 bg-emerald-700 px-7 py-3.5 font-display text-base font-extrabold text-white shadow-md transition-all duration-300 ease-out;
   }
 
   .btn-report:hover {
-    @apply -translate-y-0.5 scale-[1.02] border-brand-red bg-brand-red text-white;
-    box-shadow: 0 8px 24px rgba(193, 18, 31, 0.38);
+    @apply -translate-y-0.5 scale-[1.02] border-emerald-800 bg-emerald-800 text-white;
+    box-shadow: 0 8px 24px rgba(4, 120, 87, 0.35);
   }
 
   .btn-report:active {
@@ -487,6 +496,10 @@
     @apply w-full rounded-xl border-2 border-white/90 bg-brand-dark py-3 pl-4 pr-12 text-base font-medium italic text-white shadow-[0_8px_28px_rgba(0,75,43,0.4)] transition-all duration-300 placeholder:italic placeholder:text-white/80 focus:border-brand-yellow focus:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-yellow/45;
   }
 
+  .search-input-modal {
+    @apply w-full rounded-xl border-2 border-brand-dark/15 bg-brand-bg py-3.5 pl-4 pr-12 text-base font-semibold text-brand-dark shadow-sm transition-all duration-300 placeholder:font-medium placeholder:text-brand-dark/45 focus:border-brand-green focus:shadow-glow focus:outline-none focus:ring-2 focus:ring-brand-green/25;
+  }
+
   .gne-leaflet-map {
     height: min(52vh, 480px);
     min-height: 360px;
@@ -585,6 +598,11 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     cursor: pointer;
+  }
+
+  .modal-panel--search {
+    width: min(100%, 36rem);
+    max-height: min(92dvh, 42rem);
   }
 
   .modal-panel {

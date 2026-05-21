@@ -1,4 +1,4 @@
-# Test consensus — POST /api/reports (anonyme, sans OTP)
+# Test consensus — POST /api/reports (anonyme)
 # Prerequis : npm run dev (backend) + npm run db:seed
 
 $BaseUrl = if ($env:API_URL) { $env:API_URL } else { "http://localhost:3000" }

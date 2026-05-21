@@ -164,7 +164,7 @@ export default function CommuneQuickPicker({
                     : 'px-3 py-3 text-sm font-bold'
               } ${
                 selected
-                  ? 'bg-brand-bg font-extrabold text-brand-dark ring-2 ring-brand-green/35'
+                  ? 'rounded-lg bg-emerald-50 font-extrabold text-emerald-900'
                   : 'font-bold text-brand-dark/90'
               }`}
             >

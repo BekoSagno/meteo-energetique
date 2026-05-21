@@ -25,6 +25,18 @@ function MapInvalidateSize() {
   return null;
 }
 
+/** Recentre sur le Grand Conakry (diaspora / position hors zone). */
+function MapGrandConakryView({ active }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!active) return;
+    map.flyTo(CONAKRY_CENTER, DEFAULT_ZOOM, { duration: 0.55 });
+  }, [active, map]);
+
+  return null;
+}
+
 function CommunePopupContent({ commune }) {
   if (!commune) return null;
   const message = getCommuneMapMessage(commune);
@@ -267,6 +279,7 @@ export default function ConakryNetworkLeaflet({
   sectors = [],
   focusedCommuneId = null,
   selectedSectorId,
+  forceGlobalView = false,
   onCommuneClick,
   onSectorClick,
   className = '',
@@ -284,6 +297,7 @@ export default function ConakryNetworkLeaflet({
         attributionControl
       >
         <MapInvalidateSize />
+        <MapGrandConakryView active={forceGlobalView} />
 
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

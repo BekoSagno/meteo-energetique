@@ -10,10 +10,10 @@ import { formatPhoneDisplay } from '../../lib/auth.js';
 import CommuneQuickPicker from './CommuneQuickPicker.jsx';
 
 const NAV_ITEMS = [
-  { id: 'home', label: 'Accueil', icon: IconHome, href: '#accueil' },
+  { id: 'home', label: 'La Météo du Jour', icon: IconHome, href: '#accueil', title: 'Météo du jour en direct' },
   { id: 'map', label: 'Carte', icon: IconMap, href: '#carte' },
   { id: 'report', label: 'Signaler', icon: IconReport, action: 'report' },
-  { id: 'status', label: 'Réseau', icon: IconBolt, href: '#reseau', title: 'État réseau' },
+  { id: 'status', label: 'Historique', icon: IconBolt, href: '#reseau', title: 'Tendances sur 7 jours' },
 ];
 
 function NavLink({ item, isActive, onReportClick, delay = 0 }) {
@@ -116,7 +116,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={onLogout}
-              className="text-xs font-bold text-brand-red transition-colors duration-300 hover:text-brand-red/80 hover:underline sm:text-sm"
+              className="text-xs font-bold text-red-500 transition-colors duration-300 hover:text-red-600 hover:underline sm:text-sm"
             >
               Déconnexion
             </button>

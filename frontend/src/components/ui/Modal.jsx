@@ -12,6 +12,7 @@ export default function Modal({
   labelledBy,
   closeOnBackdrop = true,
   zIndex = 9999,
+  panelClassName = '',
 }) {
   useEffect(() => {
     if (!open) return;
@@ -45,7 +46,7 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        className="modal-panel"
+        className={`modal-panel ${panelClassName}`.trim()}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >

@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { prisma } from '../lib/prisma.js';
-import { saveOtp, verifyOtp } from './otpStore.js';
 
 const JWT_EXPIRES_IN = '7d';
 
@@ -31,43 +30,11 @@ export function normalizePhoneNumber(raw) {
   return `+${digits}`;
 }
 
-function generateOtpCode() {
-  return String(Math.floor(1000 + Math.random() * 9000));
-}
-
-export async function requestOtp(body) {
+/**
+ * Connexion citoyenne : création ou récupération du compte, JWT immédiat (sans OTP).
+ */
+export async function loginWithPhone(body) {
   const phoneNumber = normalizePhoneNumber(body.phoneNumber);
-  const code = generateOtpCode();
-
-  saveOtp(phoneNumber, code);
-
-  console.log(`🔑 CODE OTP POUR ${phoneNumber} : ${code}`);
-
-  return {
-    ok: true,
-    phoneNumber,
-    expiresInSeconds: 300,
-    message: 'Code envoyé. Consultez la console du serveur en mode développement.',
-  };
-}
-
-export async function verifyOtpAndLogin(body) {
-  const phoneNumber = normalizePhoneNumber(body.phoneNumber);
-  const code = String(body.code ?? '').trim();
-
-  if (!/^\d{4}$/.test(code)) {
-    throw createError(400, 'VALIDATION_ERROR', 'Le code doit contenir 4 chiffres.');
-  }
-
-  const check = verifyOtp(phoneNumber, code);
-  if (!check.ok) {
-    const messages = {
-      NOT_FOUND: 'Aucun code en cours. Demandez un nouveau code.',
-      EXPIRED: 'Code expiré. Demandez un nouveau code.',
-      INVALID: 'Code incorrect.',
-    };
-    throw createError(401, 'OTP_INVALID', messages[check.reason] ?? 'Code invalide.');
-  }
 
   let user = await prisma.user.findUnique({
     where: { phoneNumber },

@@ -25,7 +25,7 @@ export default function Header({ onMenuToggle, menuOpen = false, index, indexLoa
               Météo Énergétique
             </span>
             <span className="header-subtitle text-xs font-semibold text-white/80 sm:text-sm">
-              Grand Conakry · suivi réseau en temps réel
+              Grand Conakry · la météo du jour en direct
             </span>
           </span>
         </a>

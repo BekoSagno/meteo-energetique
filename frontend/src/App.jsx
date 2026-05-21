@@ -4,11 +4,15 @@ import PageTransition from './components/motion/PageTransition.jsx';
 import NetworkStats from './components/NetworkStats.jsx';
 import InteractiveNetworkMap from './components/InteractiveNetworkMap.jsx';
 import AppLayout from './components/layout/AppLayout.jsx';
-import OtpAuthModal from './components/auth/OtpAuthModal.jsx';
+import PhoneAuthModal from './components/auth/PhoneAuthModal.jsx';
 import ReportButton from './components/ReportButton.jsx';
 import TopCommunes from './components/TopCommunes.jsx';
 import ViewPageTitle from './components/motion/ViewPageTitle.jsx';
-import { fetchFallbackSector } from './lib/defaultSector.js';
+import LocationRefiningBanner from './components/LocationRefiningBanner.jsx';
+import HomeLandingHero from './components/landing/HomeLandingHero.jsx';
+import CitizenEngagementSection from './components/landing/CitizenEngagementSection.jsx';
+import ReadyToActBanner from './components/landing/ReadyToActBanner.jsx';
+import { fetchFallbackSector, INSTANT_PLACEHOLDER_SECTOR } from './lib/defaultSector.js';
 import { useAppView } from './hooks/useAppView.js';
 import { useGeolocation } from './hooks/useGeolocation.js';
 import { useSearchIndex } from './hooks/useSearchIndex.js';
@@ -17,12 +21,13 @@ import { formatSectorDisplayName } from './lib/sectorDisplay.js';
 import { useAuthSession } from './hooks/useAuthSession.js';
 
 function App() {
-  const [selectedSector, setSelectedSector] = useState(null);
-  const [locationMode, setLocationMode] = useState(null);
+  const [selectedSector, setSelectedSector] = useState(INSTANT_PLACEHOLDER_SECTOR);
+  const [locationMode, setLocationMode] = useState('fallback');
   const [weatherRefresh, setWeatherRefresh] = useState(0);
-  const [fallbackLoading, setFallbackLoading] = useState(true);
-  const [otpOpen, setOtpOpen] = useState(false);
+  const [apiRefining, setApiRefining] = useState(true);
+  const [authOpen, setAuthOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   /** Commune choisie sur la carte : zoom local uniquement, pas de navigation. */
   const [mapFocusedCommuneId, setMapFocusedCommuneId] = useState(null);
   const userHasChosen = useRef(false);
@@ -32,37 +37,45 @@ function App() {
   const geo = useGeolocation({ enabled: true });
   const { index, loading: indexLoading, error: indexError } = useSearchIndex();
 
-  async function ensureDefaultSector() {
-    if (userHasChosen.current) return;
-    try {
-      const fallback = await fetchFallbackSector();
-      if (fallback && !userHasChosen.current) {
-        setSelectedSector((prev) => prev ?? fallback);
-        setLocationMode((mode) => (mode === 'gps' ? 'gps' : 'fallback'));
-      }
-    } catch {
-      /* le hook géoloc tentera aussi le repli */
-    } finally {
-      setFallbackLoading(false);
-    }
-  }
-
   useEffect(() => {
-    ensureDefaultSector();
+    if (userHasChosen.current) return;
+
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const fallback = await fetchFallbackSector(controller.signal);
+        if (fallback && !userHasChosen.current && !controller.signal.aborted) {
+          setSelectedSector((prev) => {
+            if (userHasChosen.current) return prev;
+            return fallback;
+          });
+          setLocationMode((mode) => {
+            if (mode === 'gps' || mode === 'diaspora') return mode;
+            return 'fallback';
+          });
+        }
+      } catch {
+        /* le placeholder Kaloum reste affiché */
+      } finally {
+        if (!controller.signal.aborted) setApiRefining(false);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    if (geo.sector && !userHasChosen.current) {
-      setSelectedSector(geo.sector);
-      setLocationMode(geo.locationMode);
-      setFallbackLoading(false);
-    }
+    if (!geo.sector || userHasChosen.current) return;
+    setSelectedSector(geo.sector);
+    setLocationMode(geo.locationMode ?? 'gps');
+    setApiRefining(false);
   }, [geo.sector, geo.locationMode]);
 
   useEffect(() => {
-    if (geo.loading || userHasChosen.current || selectedSector) return;
-    ensureDefaultSector();
-  }, [geo.loading, selectedSector]);
+    if (!geo.diasporaView || userHasChosen.current) return;
+    setMapFocusedCommuneId(null);
+  }, [geo.diasporaView]);
 
   function scrollToLiveDashboard() {
     requestAnimationFrame(() => {
@@ -78,7 +91,7 @@ function App() {
     userHasChosen.current = true;
     setSelectedSector(sector);
     setLocationMode(null);
-    setFallbackLoading(false);
+    setApiRefining(false);
 
     const hash = window.location.hash.replace(/^#/, '') || 'accueil';
     if (hash !== 'accueil' && hash !== 'meteo' && hash !== 'signaler') {
@@ -105,7 +118,7 @@ function App() {
     userHasChosen.current = true;
     setSelectedSector(sector);
     setLocationMode(null);
-    setFallbackLoading(false);
+    setApiRefining(false);
     navigateTo('accueil');
     window.setTimeout(scrollToLiveDashboard, 150);
   }
@@ -115,7 +128,7 @@ function App() {
     if (sector) {
       setSelectedSector(sector);
       setLocationMode(null);
-      setFallbackLoading(false);
+      setApiRefining(false);
     }
   }
 
@@ -146,12 +159,22 @@ function App() {
     quartier: quartierName,
   };
 
-  const bootstrapping = (geo.loading || fallbackLoading) && !selectedSector;
+  const refiningLocation =
+    !userHasChosen.current && (apiRefining || geo.refining);
+  const refiningDetail =
+    geo.refining && apiRefining
+      ? 'Connexion au serveur et affinage GPS…'
+      : geo.refining
+        ? 'Détection de votre secteur (GPS)…'
+        : apiRefining
+          ? 'Synchronisation des données Conakry…'
+          : undefined;
+
   const selectedCommuneId = selectedSector?.communeId ?? selectedSector?.commune?.id;
   const selectedSectorId = selectedSector?.id ?? null;
+  const diasporaMapView = locationMode === 'diaspora' || geo.diasporaView;
 
   const networkStatsProps = {
-    key: selectedSector?.id ?? 'default',
     sectorId: selectedSector?.id ?? 1,
     sectorName: selectedSector?.name ?? sectorDisplayName,
     quartierName,
@@ -177,19 +200,19 @@ function App() {
       indexLoading={indexLoading}
       onSectorSelect={handleSectorSelect}
       onCommuneSelect={handleCommuneSelect}
-      onLoginClick={() => setOtpOpen(true)}
+      onLoginClick={() => setAuthOpen(true)}
       onLogout={logout}
       onReportClick={handleReportFromNav}
       authUser={authUser}
       activeView={view}
       selectedCommuneId={selectedCommuneId}
     >
-      <OtpAuthModal
-        open={otpOpen}
-        onClose={() => setOtpOpen(false)}
+      <PhoneAuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
         onSuccess={(session) => {
           login(session);
-          setOtpOpen(false);
+          setAuthOpen(false);
         }}
       />
 
@@ -207,8 +230,9 @@ function App() {
             <InteractiveNetworkMap
               sectors={index.sectors}
               regionId={conakryRegionId}
-              focusedCommuneId={mapFocusedCommuneId}
+              focusedCommuneId={diasporaMapView ? null : mapFocusedCommuneId}
               selectedSectorId={selectedSectorId}
+              forceGlobalView={diasporaMapView}
               onCommuneFocus={handleMapCommuneFocus}
               onSectorSelect={handleMapSectorSelect}
               refreshKey={weatherRefresh}
@@ -224,61 +248,71 @@ function App() {
             {indexError && (
               <p className="mb-4 text-center text-sm font-semibold text-brand-red">{indexError}</p>
             )}
-            {bootstrapping ? (
-              <div className="card-elevated p-12">
-                <div className="shimmer-block mx-auto h-5 w-40 rounded-lg" />
-                <p className="mt-6 text-center font-display text-base font-bold text-brand-dark">
-                  Chargement des statistiques…
-                </p>
-              </div>
-            ) : (
-              <NetworkStats {...networkStatsProps} dashboardTitle="État du réseau" />
-            )}
+            <LocationRefiningBanner active={refiningLocation} detail={refiningDetail} />
+            <NetworkStats
+              key={selectedSector?.id ?? 'default'}
+              {...networkStatsProps}
+              dashboardTitle="La Météo du Jour — Temps réel"
+            />
           </section>
         </PageTransition>
       ) : isAccueil ? (
         <PageTransition viewKey="accueil">
-          <section id="accueil" className="mx-auto w-full max-w-5xl pb-4">
+          <section id="accueil" className="mx-auto w-full max-w-5xl pb-4 pt-0">
             {indexError && (
               <p className="mb-4 text-center text-sm font-semibold text-brand-red">{indexError}</p>
             )}
 
-            {bootstrapping ? (
-              <div className="card-elevated p-12">
-                <div className="shimmer-block mx-auto h-5 w-40 rounded-lg" />
-                <p className="mt-6 text-center font-display text-base font-bold text-brand-dark">
-                  Chargement du tableau de bord…
-                </p>
-              </div>
-            ) : (
-              <div className="flex w-full flex-col gap-6">
-                <NetworkStats
-                  {...networkStatsProps}
-                  dashboardTitle="Tableau de bord — temps réel"
-                />
-
-                <div id="signaler">
-                  <AnimateIn delay={200} className="w-full">
-                    <button
-                      type="button"
-                      onClick={handleReportFromNav}
-                      className="btn-report w-full py-4 text-base"
-                    >
-                      Signaler un changement d&apos;état
-                    </button>
-                  </AnimateIn>
+            <div className="flex w-full flex-col gap-10 sm:gap-12">
+              <div
+                id="meteo"
+                className="scroll-mt-20 overflow-hidden rounded-2xl border-2 border-brand-dark/15 bg-brand-bg shadow-card"
+              >
+                <div className="relative bg-brand-dark">
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-green/15 via-transparent to-brand-yellow/8"
+                    aria-hidden
+                  />
+                  <HomeLandingHero embedded />
+                  {refiningLocation && (
+                    <div className="relative z-10 border-b border-white/10 px-4 py-2 sm:px-6">
+                      <LocationRefiningBanner active detail={refiningDetail} />
+                    </div>
+                  )}
+                  <NetworkStats
+                    key={selectedSector?.id ?? 'default'}
+                    {...networkStatsProps}
+                    embedded
+                    dashboardTitle="L'ÉTAT ACTUEL DU COURANT"
+                  />
                 </div>
-
-                <TopCommunes
-                  regionId={conakryRegionId}
-                  communes={index.communes}
-                  sectors={index.sectors}
-                  selectedCommuneId={selectedCommuneId}
-                  onCommuneSelect={handleCommuneSelect}
-                  refreshKey={weatherRefresh}
-                />
               </div>
-            )}
+
+              <div id="signaler" className="scroll-mt-24">
+                <AnimateIn delay={200} className="w-full">
+                  <button
+                    type="button"
+                    onClick={handleReportFromNav}
+                    className="btn-report w-full py-4 text-base"
+                  >
+                    Signaler un changement d&apos;état
+                  </button>
+                </AnimateIn>
+              </div>
+
+              <TopCommunes
+                regionId={conakryRegionId}
+                communes={index.communes}
+                sectors={index.sectors}
+                selectedCommuneId={selectedCommuneId}
+                onCommuneSelect={handleCommuneSelect}
+                refreshKey={weatherRefresh}
+              />
+
+              <CitizenEngagementSection />
+
+              <ReadyToActBanner onDiscoverMap={() => navigateTo('carte')} />
+            </div>
           </section>
         </PageTransition>
       ) : null}

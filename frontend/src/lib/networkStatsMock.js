@@ -123,7 +123,7 @@ export const DAY_STATUS_CONFIG = {
 };
 
 export const TIMELINE_SEGMENT_CLASS = {
-  online: 'bg-brand-green',
+  online: 'bg-brand-dark',
   offline: 'bg-brand-red',
-  unstable: 'bg-brand-dark/35',
+  unstable: 'bg-brand-yellow',
 };

@@ -39,7 +39,17 @@ Copier le modèle depuis `backend/.env.example`.
 { "reportType": "TOTAL_DARKNESS", "lat": 9.558, "lng": -13.647 }
 ```
 
-Aucun OTP ni JWT requis.
+Aucun JWT requis pour signaler.
+
+### Connexion citoyenne (optionnelle)
+
+`POST /api/auth/login` — corps JSON :
+
+```json
+{ "phoneNumber": "612345678" }
+```
+
+Réponse : `{ "token", "user" }` — **aucun code SMS**, connexion immédiate.
 
 ---
 

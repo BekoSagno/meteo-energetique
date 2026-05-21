@@ -148,19 +148,23 @@ export default function TopCommunes({
   return (
     <AnimateIn delay={280} className="w-full">
       <article
-        className="card-elevated overflow-hidden"
+        className="relative overflow-hidden rounded-2xl bg-brand-dark shadow-card"
         aria-label="Top communes du Grand Conakry"
       >
-        <header className="border-b border-brand-dark/10 bg-gradient-to-r from-brand-dark to-[#006b3f] px-5 py-4 text-white sm:px-6">
-          <p className="text-shine font-display text-lg font-extrabold tracking-tight sm:text-xl">
-            Top Communes — État du réseau aujourd&apos;hui
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-green/20 via-transparent to-brand-yellow/10"
+          aria-hidden
+        />
+        <header className="relative border-b border-white/10 px-5 py-4 sm:px-6">
+          <p className="font-display text-lg font-extrabold tracking-tight text-white sm:text-xl">
+            Top Communes — La Météo du Jour
           </p>
           <p className="mt-1 text-sm font-semibold text-white/80">
             Classement en direct · {ranked.length || 13} communes du Grand Conakry
           </p>
         </header>
 
-        <div className="bg-brand-bg/50 p-4 sm:p-5">
+        <div className="relative bg-white/95 p-4 sm:p-5">
           {loading && (
             <div className="space-y-4" aria-busy="true">
               <div className="flex gap-3">

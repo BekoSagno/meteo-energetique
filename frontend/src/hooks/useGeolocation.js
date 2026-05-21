@@ -1,73 +1,104 @@
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../lib/constants.js';
+import {
+  isWithinGrandConakryCoverage,
+  isWithinGuinea,
+} from '../lib/conakryBounds.js';
 import { fetchFallbackSector } from '../lib/defaultSector.js';
 import { mapCurrentToSector } from '../lib/sectorMapper.js';
 
 export { mapCurrentToSector } from '../lib/sectorMapper.js';
 
+/** @typedef {'gps' | 'fallback' | 'diaspora'} LocationMode */
+
+/**
+ * Résout un secteur via l'API — ne lève pas si hors zone (sector null) ou erreur HTTP.
+ * @returns {Promise<import('../lib/sectorMapper.js').mapCurrentToSector extends Function ? ReturnType<typeof mapCurrentToSector> : null>}
+ */
 async function resolveSectorAt(lat, longitude, signal) {
   const url = new URL(`${API_BASE_URL}/api/sectors/current`);
   url.searchParams.set('lat', String(lat));
   url.searchParams.set('lng', String(longitude));
 
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+  try {
+    const res = await fetch(url, { signal });
+    if (!res.ok) return null;
 
-  const json = await res.json();
-  return mapCurrentToSector(json);
+    const json = await res.json();
+    return mapCurrentToSector(json);
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err;
+    return null;
+  }
 }
 
 /**
- * GPS d'abord, puis secteur de repli (Dixinn Centre) en cas d'échec.
- * @returns {{ loading, sector, locationMode: 'gps'|'fallback'|null }}
+ * Géolocalisation en arrière-plan — repli Kaloum si hors zone ou API vide.
+ * @returns {{ refining, sector, locationMode: LocationMode|null, outOfCoverage, diasporaView }}
  */
 export function useGeolocation({ enabled = true } = {}) {
-  const [loading, setLoading] = useState(enabled);
+  const [refining, setRefining] = useState(enabled);
   const [sector, setSector] = useState(null);
   const [locationMode, setLocationMode] = useState(null);
+  const [outOfCoverage, setOutOfCoverage] = useState(false);
+  const [diasporaView, setDiasporaView] = useState(false);
 
   useEffect(() => {
     if (!enabled) {
-      setLoading(false);
+      setRefining(false);
       return;
     }
 
     const controller = new AbortController();
 
-    async function applyFallback() {
-      try {
-        const fallback = await fetchFallbackSector(controller.signal);
-        if (fallback && !controller.signal.aborted) {
-          setSector(fallback);
-          setLocationMode('fallback');
-        }
-      } catch {
-        /* App.jsx charge aussi le repli */
+    async function applyKaloumFallback(mode) {
+      const fallback = await fetchFallbackSector(controller.signal);
+      if (controller.signal.aborted) return;
+
+      if (fallback) {
+        setSector(fallback);
+        setLocationMode(mode);
       }
+      setOutOfCoverage(true);
+      setDiasporaView(mode === 'diaspora');
     }
 
     async function finishWithGps(lat, lng) {
       try {
+        const abroad = !isWithinGuinea(lat, lng);
+        const inConakry = isWithinGrandConakryCoverage(lat, lng);
+
+        if (!inConakry) {
+          await applyKaloumFallback(abroad ? 'diaspora' : 'fallback');
+          return;
+        }
+
         const mapped = await resolveSectorAt(lat, lng, controller.signal);
         if (controller.signal.aborted) return;
 
         if (mapped) {
           setSector(mapped);
           setLocationMode('gps');
-        } else {
-          await applyFallback();
+          setOutOfCoverage(false);
+          setDiasporaView(false);
+          return;
         }
-      } catch {
-        if (!controller.signal.aborted) await applyFallback();
+
+        await applyKaloumFallback(abroad ? 'diaspora' : 'fallback');
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+        try {
+          await applyKaloumFallback('fallback');
+        } catch {
+          /* placeholder App inchangé */
+        }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setRefining(false);
       }
     }
 
     if (!navigator.geolocation) {
-      applyFallback().finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
+      setRefining(false);
       return () => controller.abort();
     }
 
@@ -76,15 +107,21 @@ export function useGeolocation({ enabled = true } = {}) {
         finishWithGps(position.coords.latitude, position.coords.longitude);
       },
       () => {
-        applyFallback().finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
+        if (!controller.signal.aborted) setRefining(false);
       },
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 120_000 }
     );
 
     return () => controller.abort();
   }, [enabled]);
 
-  return { loading, sector, locationMode };
+  return {
+    refining,
+    sector,
+    locationMode,
+    outOfCoverage,
+    diasporaView,
+    /** @deprecated Utiliser `refining` */
+    loading: refining,
+  };
 }
