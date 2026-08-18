@@ -1,6 +1,7 @@
 import { env } from './config/env.js';
 import { createApp } from './app.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
+import { ensureEdgStaffUser } from './services/edgStaff.js';
 import { connectMqtt, disconnectMqtt } from './mqtt/client.js';
 
 const app = createApp();
@@ -9,6 +10,7 @@ let server = null;
 async function start() {
   await connectDatabase();
   console.info('[DB] PostgreSQL connecté');
+  await ensureEdgStaffUser();
 
   // MODIFICATION ICI : On ne connecte MQTT que si on n'est pas sur Render
   if (!process.env.RENDER) {

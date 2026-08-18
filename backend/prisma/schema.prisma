@@ -30,6 +30,7 @@ model Commune {
   region    Region    @relation(fields: [regionId], references: [id], onDelete: Cascade)
   quartiers Quartier[]
   sectors   Sector[]
+  users     User[]
 
   @@unique([regionId, name], map: "unique_commune_per_region")
   @@map("communes")
@@ -43,6 +44,7 @@ model Quartier {
 
   commune Commune  @relation(fields: [communeId], references: [id], onDelete: Cascade)
   sectors Sector[]
+  users   User[]
 
   @@unique([communeId, name], map: "unique_quartier_per_commune")
   @@map("quartiers")
@@ -73,15 +75,25 @@ model Sector {
 model User {
   id              Int      @id @default(autoincrement())
   phoneNumber     String   @unique @map("phone_number") @db.VarChar(20)
-  name            String?  @db.VarChar(100)
+  firstName       String?  @map("first_name") @db.VarChar(80)
+  lastName        String?  @map("last_name") @db.VarChar(80)
+  name            String?  @db.VarChar(160)
   role            String   @default("citizen") @db.VarChar(20)
+  communeId       Int?     @map("commune_id")
+  quartierId      Int?     @map("quartier_id")
   defaultSectorId Int?     @map("default_sector_id")
+  notifySms       Boolean  @default(false) @map("notify_sms")
+  notifyWhatsapp  Boolean  @default(false) @map("notify_whatsapp")
+  notifyInApp     Boolean  @default(true) @map("notify_in_app")
   fcmToken        String?  @map("fcm_token")
   isVerified      Boolean  @default(false) @map("is_verified")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  commune       Commune?     @relation(fields: [communeId], references: [id], onDelete: SetNull)
+  quartier      Quartier?    @relation(fields: [quartierId], references: [id], onDelete: SetNull)
   defaultSector Sector?      @relation(fields: [defaultSectorId], references: [id], onDelete: SetNull)
   reports       UserReport[]
+  notifications NotificationOutbox[]
 
   @@map("users")
 }
@@ -139,4 +151,47 @@ model UserReport {
 
   @@index([reportedAt(sort: Desc)], map: "idx_user_reports_time")
   @@map("user_reports")
+}
+
+/** Contenus Info (actualités, panels, textes) — canaux préparés, sans envoi SMS/WhatsApp. */
+model InfoPublication {
+  id            Int       @id @default(autoincrement())
+  tab           String    @db.VarChar(20)
+  badge         String    @default("officiel") @db.VarChar(20)
+  title         String    @db.VarChar(220)
+  summary       String    @db.VarChar(400)
+  body          String
+  zoneLabel     String    @map("zone_label") @db.VarChar(160)
+  communeId     Int?      @map("commune_id")
+  quartierId    Int?      @map("quartier_id")
+  sectorId      Int?      @map("sector_id")
+  shortMessage  String?   @map("short_message") @db.VarChar(160)
+  channelInApp  Boolean   @default(true) @map("channel_in_app")
+  channelSms    Boolean   @default(false) @map("channel_sms")
+  channelWhatsapp Boolean @default(false) @map("channel_whatsapp")
+  status        String    @default("published") @db.VarChar(20)
+  publishedAt   DateTime  @default(now()) @map("published_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  outbox NotificationOutbox[]
+
+  @@index([tab, publishedAt(sort: Desc)], map: "idx_info_tab_published")
+  @@map("info_publications")
+}
+
+/** File d’envoi prévue (queued uniquement — aucun SMS/WhatsApp n’est envoyé). */
+model NotificationOutbox {
+  id             Int      @id @default(autoincrement())
+  publicationId  Int      @map("publication_id")
+  userId         Int      @map("user_id")
+  channel        String   @db.VarChar(20)
+  status         String   @default("queued") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  publication InfoPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, userId, channel], map: "unique_outbox_user_channel")
+  @@index([status, channel], map: "idx_outbox_status_channel")
+  @@map("notification_outbox")
 }

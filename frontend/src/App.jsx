@@ -5,9 +5,12 @@ import NetworkStats from './components/NetworkStats.jsx';
 import InteractiveNetworkMap from './components/InteractiveNetworkMap.jsx';
 import AppLayout from './components/layout/AppLayout.jsx';
 import PhoneAuthModal from './components/auth/PhoneAuthModal.jsx';
+import RegisterPage from './components/auth/RegisterPage.jsx';
 import ReportButton from './components/ReportButton.jsx';
 import TopCommunes from './components/TopCommunes.jsx';
 import ViewPageTitle from './components/motion/ViewPageTitle.jsx';
+import InfoPage from './components/info/InfoPage.jsx';
+import AdminApp, { resolveAdminSection } from './components/admin/AdminApp.jsx';
 import HomeLandingHero from './components/landing/HomeLandingHero.jsx';
 import CitizenEngagementSection from './components/landing/CitizenEngagementSection.jsx';
 import ReadyToActBanner from './components/landing/ReadyToActBanner.jsx';
@@ -30,7 +33,7 @@ function App() {
   const [mapFocusedCommuneId, setMapFocusedCommuneId] = useState(null);
   const userHasChosen = useRef(false);
 
-  const { view, isReseau, isCarte, isAccueil, navigateTo } = useAppView();
+  const { view, hashId, isInfo, isInscription, isAdmin, isCarte, isAccueil, navigateTo } = useAppView();
   const { user: authUser, login, logout } = useAuthSession();
   const geo = useGeolocation({ enabled: true });
   const { index, loading: indexLoading, error: indexError } = useSearchIndex();
@@ -88,7 +91,7 @@ function App() {
     setLocationMode(null);
 
     const hash = window.location.hash.replace(/^#/, '') || 'accueil';
-    if (hash !== 'accueil' && hash !== 'meteo' && hash !== 'signaler') {
+    if (hash !== 'accueil' && hash !== 'meteo' && hash !== 'signaler' && hash !== 'inscription') {
       navigateTo('accueil');
       window.setTimeout(scrollToLiveDashboard, 150);
     } else if (view === 'accueil') {
@@ -122,6 +125,25 @@ function App() {
       setSelectedSector(sector);
       setLocationMode(null);
     }
+  }
+
+  function handleAdminLogin(session) {
+    login(session);
+  }
+
+  function handleAuthSuccess(session) {
+    login(session);
+    setAuthOpen(false);
+    const sectorId = session?.user?.defaultSectorId;
+    if (sectorId != null) {
+      const matched = index.sectors.find((s) => Number(s.id) === Number(sectorId));
+      if (matched) {
+        userHasChosen.current = true;
+        setSelectedSector(matched);
+        setLocationMode(null);
+      }
+    }
+    navigateTo('accueil');
   }
 
   function handleReportFromNav() {
@@ -164,6 +186,18 @@ function App() {
     lastUpdated,
   };
 
+  if (isAdmin) {
+    return (
+      <AdminApp
+        authUser={authUser}
+        onLogin={handleAdminLogin}
+        onLogout={logout}
+        communes={index.communes}
+        section={resolveAdminSection(hashId)}
+      />
+    );
+  }
+
   const reportModal = (
     <ReportButton
       lat={lat}
@@ -191,10 +225,8 @@ function App() {
       <PhoneAuthModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
-        onSuccess={(session) => {
-          login(session);
-          setAuthOpen(false);
-        }}
+        onSuccess={handleAuthSuccess}
+        onGoRegister={() => navigateTo('inscription')}
       />
 
       {reportModal}
@@ -220,21 +252,19 @@ function App() {
             />
           </section>
         </PageTransition>
-      ) : isReseau ? (
-        <PageTransition viewKey="reseau">
-          <section id="reseau" className="w-full pb-4">
-            <ViewPageTitle subtitle="Indicateurs et disponibilité par secteur en temps réel">
-              État du réseau
-            </ViewPageTitle>
-            {indexError && (
-              <p className="mb-4 text-center text-sm font-semibold text-brand-red">{indexError}</p>
-            )}
-            <NetworkStats
-              key={selectedSector?.id ?? 'default'}
-              {...networkStatsProps}
-              dashboardTitle="La Météo du Jour — Temps réel"
-            />
-          </section>
+      ) : isInfo ? (
+        <PageTransition viewKey="info">
+          <InfoPage />
+        </PageTransition>
+      ) : isInscription ? (
+        <PageTransition viewKey="inscription">
+          <RegisterPage
+            communes={index.communes}
+            quartiers={index.quartiers}
+            sectors={index.sectors}
+            onSuccess={handleAuthSuccess}
+            onGoLogin={() => setAuthOpen(true)}
+          />
         </PageTransition>
       ) : isAccueil ? (
         <PageTransition viewKey="accueil">

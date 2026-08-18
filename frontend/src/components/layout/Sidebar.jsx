@@ -1,19 +1,19 @@
 import AnimateIn from '../motion/AnimateIn.jsx';
 import {
-  IconBolt,
   IconHome,
+  IconInfo,
   IconMap,
   IconReport,
   IconUser,
 } from '../icons/NavIcons.jsx';
-import { formatPhoneDisplay } from '../../lib/auth.js';
+import { formatPhoneDisplay, formatUserDisplayName } from '../../lib/auth.js';
 import CommuneQuickPicker from './CommuneQuickPicker.jsx';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'La Météo du Jour', icon: IconHome, href: '#accueil', title: 'Météo du jour en direct' },
   { id: 'map', label: 'Carte', icon: IconMap, href: '#carte' },
   { id: 'report', label: 'Signaler', icon: IconReport, action: 'report' },
-  { id: 'status', label: 'Historique', icon: IconBolt, href: '#reseau', title: 'Tendances sur 7 jours' },
+  { id: 'info', label: 'Info', icon: IconInfo, href: '#info', title: 'Actualités, panels et textes officiels' },
 ];
 
 function NavLink({ item, isActive, onReportClick, delay = 0 }) {
@@ -65,6 +65,7 @@ export default function Sidebar({
 }) {
   const connected = Boolean(authUser);
   const phoneDisplay = connected ? formatPhoneDisplay(authUser.phoneNumber) : '';
+  const nameDisplay = connected ? formatUserDisplayName(authUser) : '';
 
   return (
     <AnimateIn
@@ -78,7 +79,7 @@ export default function Sidebar({
           <ul className="m-0 flex list-none flex-col gap-0 p-0">
             {NAV_ITEMS.map((item, index) => {
               const isActive =
-                (item.id === 'status' && activeView === 'reseau') ||
+                (item.id === 'info' && activeView === 'info') ||
                 (item.id === 'map' && activeView === 'carte') ||
                 (item.id === 'home' && activeView === 'accueil');
 
@@ -111,8 +112,13 @@ export default function Sidebar({
               className="max-w-full text-center text-xs font-extrabold leading-snug text-brand-dark sm:text-sm"
               title={authUser.phoneNumber}
             >
-              {phoneDisplay}
+              {nameDisplay}
             </span>
+            {nameDisplay !== phoneDisplay ? (
+              <span className="max-w-full text-center text-[11px] font-semibold text-brand-dark/55">
+                {phoneDisplay}
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={onLogout}
@@ -122,10 +128,20 @@ export default function Sidebar({
             </button>
           </div>
         ) : (
-          <button type="button" onClick={onLoginClick} className="app-nav-item w-full">
-            <IconUser className="h-6 w-6 shrink-0" />
-            <span className="max-w-full text-center text-sm font-extrabold leading-snug">Se connecter</span>
-          </button>
+          <div className="flex flex-col gap-0.5">
+            <a href="#inscription" className="app-nav-item w-full">
+              <IconUser className="h-6 w-6 shrink-0" />
+              <span className="max-w-full text-center text-sm font-extrabold leading-snug">
+                S&apos;inscrire
+              </span>
+            </a>
+            <button type="button" onClick={onLoginClick} className="app-nav-item w-full">
+              <IconUser className="h-6 w-6 shrink-0" />
+              <span className="max-w-full text-center text-sm font-extrabold leading-snug">
+                Se connecter
+              </span>
+            </button>
+          </div>
         )}
       </div>
     </AnimateIn>

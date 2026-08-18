@@ -1,5 +1,4 @@
 import {
-  IconBolt,
   IconClose,
   IconHome,
   IconInfo,
@@ -8,13 +7,13 @@ import {
   IconReport,
   IconUser,
 } from '../icons/NavIcons.jsx';
-import { formatPhoneDisplay } from '../../lib/auth.js';
+import { formatPhoneDisplay, formatUserDisplayName } from '../../lib/auth.js';
 import CommuneQuickPicker from './CommuneQuickPicker.jsx';
 
 const PRIMARY_LINKS = [
   { label: 'La Météo du Jour', icon: IconHome, href: '#accueil' },
   { label: 'Carte énergétique', icon: IconMap, href: '#carte' },
-  { label: 'Historique', icon: IconBolt, href: '#reseau' },
+  { label: 'Info', icon: IconInfo, href: '#info' },
   { label: 'Signaler une coupure', icon: IconReport, action: 'report' },
 ];
 
@@ -139,6 +138,9 @@ export default function MobileNav({
             <div className="border-t border-brand-dark/10 px-5 py-4">
               <p className="text-xs font-bold uppercase tracking-wide text-brand-dark/55">Compte</p>
               <p className="mt-1 font-display text-base font-extrabold text-brand-dark">
+                {formatUserDisplayName(authUser)}
+              </p>
+              <p className="text-sm font-semibold text-brand-dark/55">
                 {formatPhoneDisplay(authUser.phoneNumber)}
               </p>
               <button
@@ -153,17 +155,27 @@ export default function MobileNav({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => {
-                onLoginClick?.();
-                onClose();
-              }}
-              className="flex w-full items-center gap-4 border-t border-brand-dark/10 px-5 py-4 font-semibold text-brand-dark transition-all hover:bg-brand-bg"
-            >
-              <IconUser className="h-5 w-5 text-brand-dark" />
-              <span className="text-sm font-bold">Se connecter</span>
-            </button>
+            <>
+              <a
+                href="#inscription"
+                onClick={onClose}
+                className="flex w-full items-center gap-4 border-t border-brand-dark/10 px-5 py-4 font-semibold text-brand-dark transition-all hover:bg-brand-bg"
+              >
+                <IconUser className="h-5 w-5 text-brand-dark" />
+                <span className="text-sm font-bold">S&apos;inscrire</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  onLoginClick?.();
+                  onClose();
+                }}
+                className="flex w-full items-center gap-4 px-5 py-4 font-semibold text-brand-dark transition-all hover:bg-brand-bg"
+              >
+                <IconUser className="h-5 w-5 text-brand-dark" />
+                <span className="text-sm font-bold">Se connecter</span>
+              </button>
+            </>
           )}
         </nav>
 

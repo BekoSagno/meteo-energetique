@@ -1,28 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/** Vues principales pilotées par le hash (#meteo, #reseau, …). */
+/** Vues principales pilotées par le hash (#meteo, #info, …). */
 export function resolveViewFromHash(hash = '') {
   const id = hash.replace(/^#/, '') || 'accueil';
-  if (id === 'reseau') return 'reseau';
+  if (id === 'info' || id === 'reseau') return 'info';
+  if (id === 'inscription') return 'inscription';
+  if (id.startsWith('admin')) return 'admin';
   if (id === 'carte') return 'carte';
   if (id === 'meteo' || id === 'accueil' || id === 'signaler') return 'accueil';
   return 'accueil';
 }
 
 export function useAppView() {
-  const [view, setView] = useState(() =>
-    typeof window !== 'undefined' ? resolveViewFromHash(window.location.hash) : 'accueil'
+  const [hashId, setHashId] = useState(() =>
+    typeof window !== 'undefined' ? window.location.hash.replace(/^#/, '') || 'accueil' : 'accueil'
   );
 
   useEffect(() => {
     function onHashChange() {
-      setView(resolveViewFromHash(window.location.hash));
+      const id = window.location.hash.replace(/^#/, '') || 'accueil';
+      setHashId(id);
     }
 
     onHashChange();
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  const view = resolveViewFromHash(`#${hashId}`);
 
   const scrollToSignaler = useCallback(() => {
     requestAnimationFrame(() => {
@@ -42,19 +47,25 @@ export function useAppView() {
       accueil: '#accueil',
       meteo: '#accueil',
       carte: '#carte',
-      reseau: '#reseau',
+      info: '#info',
+      inscription: '#inscription',
+      admin: '#admin',
+      reseau: '#info',
       signaler: '#signaler',
     };
     const hash = hashes[target] ?? '#accueil';
     if (window.location.hash !== hash) {
       window.location.hash = hash;
     }
-    setView(resolveViewFromHash(hash));
+    setHashId(hash.replace(/^#/, ''));
   }, []);
 
   return {
     view,
-    isReseau: view === 'reseau',
+    hashId,
+    isInfo: view === 'info',
+    isInscription: view === 'inscription',
+    isAdmin: view === 'admin',
     isCarte: view === 'carte',
     isAccueil: view === 'accueil',
     isMeteo: view === 'accueil',

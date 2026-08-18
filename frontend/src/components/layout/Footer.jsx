@@ -4,6 +4,7 @@ const NAV_LINKS = [
   { href: '#accueil', label: 'La Météo du Jour' },
   { href: '#carte', label: 'Carte' },
   { href: '#signaler', label: 'Signalements' },
+  { href: '#info', label: 'Info' },
 ];
 
 const LEGAL_LINKS = [
@@ -86,6 +87,9 @@ export default function Footer() {
         <p className="text-xs font-semibold tracking-wide text-white/45">
           © 2024–{year} MÉTÉO ÉNERGÉTIQUE. Tous droits réservés.
         </p>
+        <a href="#admin" className="mt-2 inline-block text-[11px] font-semibold text-white/30 hover:text-white/55">
+          Espace administration
+        </a>
       </div>
     </ScrollReveal>
   );

@@ -20,6 +20,12 @@ export function formatPhoneDisplay(phoneNumber) {
   return phoneNumber;
 }
 
+export function formatUserDisplayName(user) {
+  if (!user) return '';
+  const fromParts = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  return fromParts || user.name || formatPhoneDisplay(user.phoneNumber);
+}
+
 export function getAuthToken() {
   try {
     return localStorage.getItem(TOKEN_KEY);
