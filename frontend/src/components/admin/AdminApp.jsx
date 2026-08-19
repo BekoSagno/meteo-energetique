@@ -22,6 +22,8 @@ export default function AdminApp({
   onLogin,
   onLogout,
   communes = [],
+  quartiers = [],
+  sectors = [],
   section = 'dashboard',
 }) {
   const isStaff = authUser?.role === 'edg_staff';
@@ -44,7 +46,7 @@ export default function AdminApp({
       userName={formatUserDisplayName(authUser)}
       onLogout={onLogout}
     >
-      {section === 'info' ? <AdminInfoPage communes={communes} /> : null}
+      {section === 'info' ? <AdminInfoPage communes={communes} quartiers={quartiers} sectors={sectors} /> : null}
       {section === 'users' ? <AdminUsers /> : null}
       {section === 'reports' ? <AdminReports /> : null}
       {section === 'queue' ? <AdminQueue /> : null}

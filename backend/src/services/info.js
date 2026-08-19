@@ -53,6 +53,12 @@ Pendant cette période, évitez les appareils sensibles. Le rétablissement sera
   },
 ];
 
+function parseOptionalInt(val) {
+  if (val == null || val === '') return null;
+  const n = Number.parseInt(String(val), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 function formatPublication(row) {
   return {
     id: `pub-${row.id}`,
@@ -117,10 +123,9 @@ export async function createInfoPublication(body) {
     throw err;
   }
 
-  const communeId =
-    body.communeId != null && body.communeId !== ''
-      ? Number.parseInt(String(body.communeId), 10)
-      : null;
+  const communeId = parseOptionalInt(body.communeId);
+  const quartierId = parseOptionalInt(body.quartierId);
+  const sectorId = parseOptionalInt(body.sectorId);
 
   const created = await prisma.infoPublication.create({
     data: {
@@ -130,7 +135,9 @@ export async function createInfoPublication(body) {
       summary,
       body: bodyText,
       zoneLabel,
-      communeId: Number.isFinite(communeId) ? communeId : null,
+      communeId,
+      quartierId,
+      sectorId,
       shortMessage: body.shortMessage ? String(body.shortMessage).slice(0, 160) : null,
       channelInApp: body.channelInApp !== false,
       channelSms: Boolean(body.channelSms),

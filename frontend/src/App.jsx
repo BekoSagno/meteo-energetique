@@ -193,6 +193,8 @@ function App() {
         onLogin={handleAdminLogin}
         onLogout={logout}
         communes={index.communes}
+        quartiers={index.quartiers}
+        sectors={index.sectors}
         section={resolveAdminSection(hashId)}
       />
     );
